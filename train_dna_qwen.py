@@ -89,6 +89,7 @@ class DNALLMFineTuner(pl.LightningModule):
 
         self.text_model = self.model.text_model
         self.dna_model = self.model.dna_model
+        self.dna_norm = self.model.dna_norm
         self.dna_projection = self.model.dna_projection
 
         # Load tokenizer for target text
@@ -134,7 +135,9 @@ class DNALLMFineTuner(pl.LightningModule):
             for param in self.text_model.parameters():
                 param.requires_grad = False
 
-        # Make projection layer trainable
+        # Make normalization and projection layers trainable
+        for param in self.dna_norm.parameters():
+            param.requires_grad = True
         for param in self.dna_projection.parameters():
             param.requires_grad = True
 
@@ -407,6 +410,7 @@ class DNALLMFineTuner(pl.LightningModule):
                 max_length_text=self.max_length_text,
                 max_length_dna=self.max_length_dna,
                 return_answer_in_batch=self.return_answer_in_batch,
+                truncate_for_generation=False,
             )
                 
 
@@ -439,6 +443,7 @@ class DNALLMFineTuner(pl.LightningModule):
                 max_length_text=self.max_length_text,
                 max_length_dna=self.max_length_dna,
                 return_answer_in_batch=self.return_answer_in_batch,
+                truncate_for_generation=False,
             )
         
         elif self.hparams.dataset_type == "variant_effect_non_snv":
@@ -472,6 +477,7 @@ class DNALLMFineTuner(pl.LightningModule):
                 max_length_text=self.max_length_text,
                 max_length_dna=self.max_length_dna,
                 return_answer_in_batch=self.return_answer_in_batch,
+                truncate_for_generation=False,
             )
 
         else:
@@ -561,6 +567,7 @@ class DNALLMFineTuner(pl.LightningModule):
                 max_length_text=self.max_length_text,
                 max_length_dna=self.max_length_dna,
                 return_answer_in_batch=self.return_answer_in_batch,
+                truncate_for_generation=False,
             )
 
         return DataLoader(

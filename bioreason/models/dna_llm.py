@@ -138,6 +138,8 @@ class DNALLMModel(nn.Module):
         self.text_hidden_size = self.text_config.hidden_size
         self.dna_hidden_size = self.dna_config.hidden_size
 
+        # Normalize DNA embeddings before projection to prevent overflow (critical for larger Evo2 models)
+        self.dna_norm = nn.LayerNorm(self.dna_hidden_size)
         # Create projection layer to map DNA embeddings to text model's embedding space
         self.dna_projection = nn.Linear(self.dna_hidden_size, self.text_hidden_size)
 
@@ -217,8 +219,9 @@ class DNALLMModel(nn.Module):
                 # Get the last hidden state
                 hidden_states = outputs.hidden_states[-1]  # shape: [n_seqs, seq_len, hidden_dim]
 
-        # Project all embeddings at once
+        # Normalize and project all embeddings at once
         hidden_states = hidden_states.to(device=self.dna_projection.weight.device, dtype=self.dna_projection.weight.dtype)
+        hidden_states = self.dna_norm(hidden_states)
         projected_states = self.dna_projection(hidden_states)
 
         # Group embeddings by batch item
